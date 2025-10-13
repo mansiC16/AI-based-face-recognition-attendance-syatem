@@ -1,0 +1,324 @@
+.admin-dashboard {
+font-family: 'Inter', sans-serif;
+background-color: #f8f9fa;
+min-height: 100vh;
+}
+
+.header {
+background: white;
+color: #1a202c;
+padding: 1rem 2rem;
+display: flex;
+justify-content: space-between;
+align-items: center;
+box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+border-bottom: 1px solid #e2e8f0;
+}
+
+.logo {
+font-size: 1.25rem;
+font-weight: bold;
+color: #1a202c;
+}
+
+nav a {
+color: #4a5568;
+text-decoration: none;
+margin: 0 1rem;
+font-weight: 500;
+transition: color 0.2s;
+}
+
+nav a:hover {
+color: #4c51bf;
+}
+
+.user-info {
+display: flex;
+align-items: center;
+font-size: 0.9rem;
+}
+
+.logout-btn {
+background-color: #e53e3e;
+color: white;
+border: none;
+padding: 0.6rem 1.2rem;
+margin-left: 1rem;
+cursor: pointer;
+border-radius: 8px;
+font-weight: 500;
+transition: background-color 0.2s;
+}
+
+.logout-btn:hover {
+background-color: #c53030;
+}
+
+main {
+padding: 2rem;
+max-width: 1200px;
+margin: 0 auto;
+}
+
+.title {
+font-size: 2.5rem;
+color: #1a202c;
+margin-bottom: 1.5rem;
+}
+
+.stats {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+gap: 1.5rem;
+margin-bottom: 3rem;
+}
+
+.stat-card {
+padding: 2rem;
+border-radius: 12px;
+color: #1a202c;
+text-align: center;
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+border: 1px solid #e2e8f0;
+background-color: white;
+}
+
+.stat-number {
+font-size: 2.5rem;
+font-weight: 700;
+color: #4c51bf;
+}
+
+.stat-label {
+font-size: 1rem;
+color: #718096;
+}
+
+.section-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 1rem;
+border-bottom: 2px solid #e2e8f0;
+padding-bottom: 0.5rem;
+}
+
+h2 {
+font-size: 1.75rem;
+color: #2d3748;
+margin: 0;
+}
+
+.add-btn {
+background-color: #38a169;
+color: white;
+border: none;
+padding: 0.75rem 1.5rem;
+cursor: pointer;
+border-radius: 8px;
+font-weight: 600;
+transition: background-color 0.2s;
+}
+
+.add-btn:hover {
+background-color: #2f855a;
+}
+
+.class-table {
+width: 100%;
+background-color: white;
+border-radius: 12px;
+overflow: hidden;
+box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+border: 1px solid #e2e8f0;
+border-collapse: collapse;
+}
+
+.class-table th,
+.class-table td {
+padding: 1.25rem;
+text-align: left;
+border-bottom: 1px solid #e2e8f0;
+}
+
+.class-table th {
+background-color: #f7fafc;
+color: #4a5568;
+font-weight: 600;
+text-transform: uppercase;
+font-size: 0.875rem;
+}
+
+.teacher-tag {
+background-color: #e6e9ff;
+color: #4c51bf;
+padding: 0.4rem 0.8rem;
+border-radius: 20px;
+margin-right: 0.5rem;
+margin-bottom: 0.5rem;
+display: inline-block;
+font-size: 0.8rem;
+font-weight: 500;
+}
+
+.edit-btn,
+.delete-btn {
+background-color: #4c51bf;
+color: white;
+border: none;
+padding: 0.5rem 1rem;
+cursor: pointer;
+border-radius: 8px;
+font-weight: 500;
+transition: background-color 0.2s;
+margin-right: 0.5rem;
+}
+
+.delete-btn {
+background-color: #e53e3e;
+}
+
+.edit-btn:hover {
+background-color: #3f448c;
+}
+
+.delete-btn:hover {
+background-color: #c53030;
+}
+
+.modal {
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background-color: rgba(0,0,0,0.4);
+display: flex;
+justify-content: center;
+align-items: center;
+}
+
+.modal-content {
+background-color: white;
+padding: 2rem;
+border-radius: 12px;
+width: 100%;
+max-width: 500px;
+box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+}
+
+.modal-content h3 {
+margin-bottom: 1.5rem;
+font-size: 1.5rem;
+color: #2d3748;
+}
+
+.input,
+.select {
+width: 100%;
+padding: 0.75rem 1rem;
+margin-bottom: 1rem;
+border: 1px solid #cbd5e0;
+border-radius: 8px;
+font-size: 1rem;
+}
+
+.subject-group {
+margin-bottom: 1.5rem;
+border: 1px solid #e2e8f0;
+padding: 1rem;
+border-radius: 8px;
+background-color: #f7fafc;
+}
+
+.modal-buttons {
+display: flex;
+justify-content: flex-end;
+gap: 0.75rem;
+margin-top: 1.5rem;
+}
+
+.save-btn {
+background-color: #48bb78;
+color: white;
+border: none;
+padding: 0.75rem 1.5rem;
+cursor: pointer;
+border-radius: 8px;
+font-weight: 600;
+transition: background-color 0.2s;
+}
+
+.save-btn:hover {
+background-color: #38a169;
+}
+
+.cancel-btn {
+background-color: #a0aec0;
+color: white;
+border: none;
+padding: 0.75rem 1.5rem;
+cursor: pointer;
+border-radius: 8px;
+font-weight: 600;
+transition: background-color 0.2s;
+}
+
+.cancel-btn:hover {
+background-color: #718096;
+}
+
+.teacher-assignments {
+margin-top: 4rem;
+}
+
+.teacher-card {
+background-color: white;
+padding: 1.5rem;
+margin-bottom: 1rem;
+border-radius: 12px;
+box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+border: 1px solid #e2e8f0;
+}
+
+.teacher-card h3 {
+font-size: 1.25rem;
+margin: 0 0 0.5rem 0;
+color: #2d3748;
+}
+
+.teacher-card p {
+font-size: 0.9rem;
+margin: 0.25rem 0;
+color: #718096;
+}
+
+@media (max-width: 768px) {
+.header {
+flex-direction: column;
+align-items: flex-start;
+}
+
+nav {
+margin-top: 1rem;
+width: 100%;
+}
+
+.user-info {
+margin-top: 1rem;
+width: 100%;
+text-align: left;
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.logout-btn {
+margin-left: 0;
+}
+
+.stats {
+grid-template-columns: 1fr;
+}
+}

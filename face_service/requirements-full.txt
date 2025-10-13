@@ -1,0 +1,10 @@
+Set-Content -Path requirements.txt -Value @"
+fastapi==0.117.1
+uvicorn[standard]==0.36.0
+insightface==0.7.3
+onnxruntime==1.22.1
+numpy==2.2.6
+pillow==11.3.0
+opencv-python-headless==4.12.0.88
+python-multipart==0.0.20
+"@
