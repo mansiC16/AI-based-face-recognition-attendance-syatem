@@ -7,11 +7,6 @@ const StudentDashboard = ({ user, onLogout }) => {
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // first-login class selection
-  const [showClassPicker, setShowClassPicker] = useState(false);
-  const [classes, setClasses] = useState([]);
-  const [selectedClassId, setSelectedClassId] = useState('');
-
   // face registration modal
   const [showFaceModal, setShowFaceModal] = useState(false);
   const [videoStream, setVideoStream] = useState(null);
@@ -29,6 +24,12 @@ const StudentDashboard = ({ user, onLogout }) => {
   const [verifyBusy, setVerifyBusy] = useState(false);
   const [verifySubject, setVerifySubject] = useState(null);
 
+  // profile dropdown and edit profile
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+
   const studentName = useMemo(() => (user?.name || user?.email || 'Student'), [user]);
 
   useEffect(() => {
@@ -40,18 +41,17 @@ const StudentDashboard = ({ user, onLogout }) => {
         const me = meRes.data;
         setProfile(me);
 
-        // KEY CHANGE: show picker if first_login === 1 (or class_id is null)
-        if (me.first_login === 1 || !me.class_id) {
-          setShowClassPicker(true);
-          const classRes = await axios.get('http://localhost:5000/classes/with-stats');
-          setClasses(classRes.data);
-        } else {
-          // normal dashboard flow
-          const subjRes = await axios.get(`http://localhost:5000/api/students/${me.id}/subjects`);
-          const subs = subjRes.data.subjects || [];
-          setSubjects(subs);
-          await Promise.all([refreshActiveSessions(me.id), refreshFaceStatus(me.id)]);
+        if (!me.class_id) {
+          alert('No class assigned yet. Please contact your administrator.');
+          setLoading(false);
+          return;
         }
+
+        // Load subjects
+        const subjRes = await axios.get(`http://localhost:5000/api/students/${me.id}/subjects`);
+        const subs = subjRes.data.subjects || [];
+        setSubjects(subs);
+        await Promise.all([refreshActiveSessions(me.id), refreshFaceStatus(me.id)]);
       } catch (err) {
         console.error(err);
         alert('Failed to load student dashboard');
@@ -82,26 +82,6 @@ const StudentDashboard = ({ user, onLogout }) => {
       const r = await axios.get('http://localhost:5000/api/student-faces/has', { params: { student_id: studentId } });
       setHasFace(!!r.data.has_face);
     } catch { setHasFace(false); }
-  };
-
-  // ----- class selection -----
-  const handleConfirmClass = async () => {
-    if (!selectedClassId) return alert('Please select a class');
-    try {
-      setLoading(true);
-      const res = await axios.post('http://localhost:5000/api/students/select-class', {
-        student_id: profile.id, class_id: parseInt(selectedClassId, 10),
-      });
-      // After selection, server sets first_login=0 and auto-enrolls to all subjects of the class
-      setProfile(prev => ({ ...prev, class_id: res.data.class.id, first_login: 0 }));
-      setSubjects(res.data.subjects || []);
-      setShowClassPicker(false);
-      await Promise.all([refreshActiveSessions(profile.id), refreshFaceStatus(profile.id)]);
-    } catch (err) {
-      console.error(err);
-      alert(err?.response?.data?.error || 'Class selection failed');
-      try { const classRes = await axios.get('http://localhost:5000/classes/with-stats'); setClasses(classRes.data); } catch {}
-    } finally { setLoading(false); }
   };
 
   // ----- face register modal -----
@@ -251,6 +231,36 @@ const StudentDashboard = ({ user, onLogout }) => {
     } catch { alert('Failed to load attendance history'); }
   };
 
+  const openEditProfile = () => {
+    setEditName(profile?.name || '');
+    setEditEmail(profile?.email || '');
+    setShowEditProfile(true);
+    setShowProfileMenu(false);
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      await axios.put(`http://localhost:5000/api/students/${profile.id}`, {
+        name: editName,
+        email: editEmail
+      });
+      setProfile(prev => ({ ...prev, name: editName, email: editEmail }));
+      alert('Profile updated successfully!');
+      setShowEditProfile(false);
+    } catch (err) {
+      alert(err?.response?.data?.error || 'Failed to update profile');
+    }
+  };
+
+  const getInitials = (name) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   if (loading && !profile) return <div style={{ padding: 24 }}>Loading student dashboard…</div>;
 
   return (
@@ -264,45 +274,34 @@ const StudentDashboard = ({ user, onLogout }) => {
         <div className="header-right">
           {hasFace === false && <button className="face-btn" onClick={openFaceModal}>Register Face</button>}
           {hasFace === true && <span className="face-pill ok">Face Registered</span>}
-          <div className="user-info">
-            <span className="user-name">{studentName}</span>
-            <span className="user-role">Student</span>
-          </div>
-          <button onClick={onLogout} className="logout-button">Logout</button>
-        </div>
-      </div>
-
-      {/* First-login Class Selection */}
-      {showClassPicker && (
-        <div className="overlay">
-          <div className="overlay-card">
-            <h3 style={{ marginTop: 0 }}>Select Your Class</h3>
-            <p style={{ margin: '6px 0 12px', color: '#555' }}>Choose one class to enroll.</p>
-
-            <div className="card">
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: 8 }}>Available Classes</label>
-              <select value={selectedClassId} onChange={(e) => setSelectedClassId(e.target.value)}
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e5e7eb' }}>
-                <option value="">-- Select a class --</option>
-                {classes.map(c => (
-                  <option key={c.id} value={c.id} disabled={c.seats_left <= 0}>
-                    {c.name} — Strength: {c.strength} | Enrolled: {c.enrolled_count} | Seats left: {c.seats_left}{c.seats_left <= 0 ? ' (Full)' : ''}
-                  </option>
-                ))}
-              </select>
-
-              <div style={{ display: 'flex', gap: 10, marginTop: 16, justifyContent: 'flex-end' }}>
-                <button className="logout-button" onClick={() => onLogout()}>Cancel</button>
-                <button onClick={handleConfirmClass}
-                        style={{ background: '#16a34a', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: 6, cursor: 'pointer' }}>
-                  Confirm
+          
+          <div className="profile-dropdown">
+            <div className="profile-trigger" onClick={() => setShowProfileMenu(!showProfileMenu)}>
+              <div className="profile-avatar">{getInitials(studentName)}</div>
+              <div className="profile-info">
+                <span className="user-name">{studentName}</span>
+                <span className="user-role">Student</span>
+              </div>
+              <span className={`profile-dropdown-icon ${showProfileMenu ? 'open' : ''}`}>▾</span>
+            </div>
+            
+            {showProfileMenu && (
+              <div className="profile-dropdown-menu">
+                <button className="profile-dropdown-item" onClick={openEditProfile}>
+                  <span>👤</span> Edit Profile
+                </button>
+                <button className="profile-dropdown-item" onClick={() => setShowProfileMenu(false)}>
+                  <span>⚙️</span> Settings
+                </button>
+                <div className="profile-dropdown-divider"></div>
+                <button className="profile-dropdown-item danger" onClick={onLogout}>
+                  <span>🚪</span> Logout
                 </button>
               </div>
-            </div>
-            <p style={{ fontSize: 13, color: '#6b7280', marginTop: 8 }}>* This appears only once.</p>
+            )}
           </div>
         </div>
-      )}
+      </div>
 
       {/* Main */}
       <div className="dashboard-content">
@@ -330,13 +329,21 @@ const StudentDashboard = ({ user, onLogout }) => {
         {/* Subjects */}
         <div className="classes-section">
           <h2 className="section-title">My Subjects</h2>
+           {profile?.class_id && subjects.length === 0 && (
+          <div className="class-card"><div className="class-info">
+            <h3 className="class-name">No subjects found</h3>
+            <p className="class-teacher">
+              {loading ? 'Loading subjects...' : 'No subjects are assigned to your class yet. Please contact your administrator.'}
+            </p>
+          </div></div>
+        )}
 
-          {profile?.class_id && subjects.length === 0 && !showClassPicker && (
-            <div className="class-card"><div className="class-info">
-              <h3 className="class-name">Subjects not assigned yet</h3>
-              <p className="class-teacher">Please check later.</p>
-            </div></div>
-          )}
+        {!profile?.class_id && (
+          <div className="class-card"><div className="class-info">
+            <h3 className="class-name">No class assigned</h3>
+            <p className="class-teacher">Please contact your administrator to assign you to a class.</p>
+          </div></div>
+        )}
 
           {subjects.map(sub => {
             const isActive = !!activeBySubject[sub.id];
@@ -396,11 +403,16 @@ const StudentDashboard = ({ user, onLogout }) => {
         <div className="overlay">
           <div className="overlay-card">
             <h3>Register Your Face</h3>
-            <video id="faceVideo" autoPlay muted playsInline style={{ width: '100%', borderRadius: 12 }} />
-            <div style={{ display:'flex', gap:10, marginTop:12, justifyContent:'flex-end' }}>
-              <button className="logout-button" onClick={closeFaceModal}>Cancel</button>
-              <button onClick={captureAndRegister} disabled={busy}
-                      style={{ background:'#2563EB', color:'#fff', border:'none', padding:'8px 12px', borderRadius: 6 }}>
+            <div className="camera-container">
+              <video id="faceVideo" autoPlay muted playsInline className="camera-video" />
+              <div className="camera-overlay"></div>
+            </div>
+            <p className="camera-hint">
+              Position your face within the circle for best results
+            </p>
+            <div className="modal-actions">
+              <button className="btn-cancel" onClick={closeFaceModal}>Cancel</button>
+              <button className="btn-primary" onClick={captureAndRegister} disabled={busy}>
                 {busy ? 'Saving…' : 'Capture & Save'}
               </button>
             </div>
@@ -412,15 +424,53 @@ const StudentDashboard = ({ user, onLogout }) => {
       {showVerifyModal && (
         <div className="overlay">
           <div className="overlay-card">
-            <h3>Face Verification to Mark Attendance</h3>
-            <video id="verifyVideo" autoPlay muted playsInline style={{ width: '100%', borderRadius: 12 }} />
-            <p style={{ marginTop: 8, color: '#6b7280', fontSize: 13 }}>
-              Make sure your face is clearly visible. Click “Mark Attendance Now” to verify.
+            <h3>Face Verification</h3>
+            <div className="camera-container">
+              <video id="verifyVideo" autoPlay muted playsInline className="camera-video" />
+              <div className="camera-overlay"></div>
+            </div>
+            <p className="camera-hint">
+              Make sure your face is clearly visible and centered
             </p>
-            <div style={{ display:'flex', gap:10, marginTop:12, justifyContent:'flex-end' }}>
-              <button className="logout-button" onClick={closeVerifyModal}>Cancel</button>
-              <button className="mark-btn" onClick={handleVerifyAndMark} disabled={verifyBusy}>
+            <div className="modal-actions">
+              <button className="btn-cancel" onClick={closeVerifyModal}>Cancel</button>
+              <button className="btn-primary" onClick={handleVerifyAndMark} disabled={verifyBusy}>
                 {verifyBusy ? 'Verifying…' : 'Mark Attendance Now'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Profile Modal */}
+      {showEditProfile && (
+        <div className="overlay">
+          <div className="overlay-card">
+            <h3>Edit Profile</h3>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}>Name</label>
+              <input
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #E5E7EB', fontSize: '1rem' }}
+                placeholder="Enter your name"
+              />
+            </div>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}>Email</label>
+              <input
+                type="email"
+                value={editEmail}
+                onChange={(e) => setEditEmail(e.target.value)}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #E5E7EB', fontSize: '1rem' }}
+                placeholder="Enter your email"
+              />
+            </div>
+            <div className="modal-actions">
+              <button className="btn-cancel" onClick={() => setShowEditProfile(false)}>Cancel</button>
+              <button className="btn-primary" onClick={handleSaveProfile}>
+                Save Changes
               </button>
             </div>
           </div>

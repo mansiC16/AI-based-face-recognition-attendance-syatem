@@ -216,3 +216,40 @@ h2 {
   margin: 5px 0;
   color: #666;
 }
+.teacher-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.teacher-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.delete-icon-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.delete-icon-btn:hover {
+  background-color: #fee2e2;
+}
+
+.teacher-email {
+  color: #6b7280;
+  margin: 0.5rem 0;
+}
+
+.teacher-assignments {
+  color: #374151;
+  font-size: 0.9rem;
+}
